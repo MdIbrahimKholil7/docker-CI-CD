@@ -1,4 +1,4 @@
-name: CI/CD for Flask App (Without Docker Compose)
+name: CI/CD for Node App (Without Docker Compose)
 
 on:
   push:
@@ -67,7 +67,7 @@ jobs:
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
             docker pull ${{ secrets.DOCKER_USERNAME }}/node-app
 
-            # Run Flask app container
+            # Run node app container
             docker run -d \
               --name node-app \
               --network app_network \

@@ -21,7 +21,7 @@ const User = mongoose.model("User", userSchema);
 
 // 🏠 Home route
 app.get("/", (req, res) => {
-    res.send("Welcome to Node + MongoDB Server 🚀");
+    res.send("Welcome to Node + MongoDB Server 🚀 With CI/CD");
 });
 
 // 📜 Get all users

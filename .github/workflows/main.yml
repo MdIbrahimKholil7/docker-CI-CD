@@ -1,0 +1,77 @@
+name: CI/CD for Flask App (Without Docker Compose)
+
+on:
+  push:
+    branches:
+      - main  # Trigger pipeline on push to main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/node-app .
+          docker push ${{ secrets.DOCKER_USERNAME }}/node-app
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy to AWS EC2
+        run: |
+          echo "${{ secrets.AWS_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.AWS_USER }}@${{ secrets.AWS_HOST }} << 'EOF'
+
+            # Set up Docker network (if needed)
+            docker network create app_network || true
+
+            # Stop and remove existing containers if they exist
+            docker stop mongodb || true
+            docker rm mongodb || true
+            docker stop node-app || true
+            docker rm node-app || true
+
+            # Run MongoDB container
+            docker run -d \
+            --name mongodb \
+            --network app_network \
+            -v mongo_data:/data/db \
+            -e MONGO_INITDB_ROOT_USERNAME=root \
+            -e MONGO_INITDB_ROOT_PASSWORD=example \
+             mongo:latest
+
+
+            # Wait for Mongodb to fully start
+            echo "Waiting for DB to initialize..."
+            sleep 30
+
+
+            # Pull latest Flask app
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            docker pull ${{ secrets.DOCKER_USERNAME }}/node-app
+
+            # Run Flask app container
+            docker run -d \
+              --name node-app \
+              --network app_network \
+              -p 3000:3000 \
+              ${{ secrets.DOCKER_USERNAME }}/node-app
+
+          EOF

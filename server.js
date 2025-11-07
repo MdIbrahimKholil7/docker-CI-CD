@@ -19,7 +19,7 @@ const User = mongoose.model("User", userSchema);
 
 
 app.get("/", (req, res) => {
-    res.send("Welcome to Node + MongoDB Server 🚀 With CI/CD And Blue/Green Deployment 🚀🚀🚀🚀");
+    res.send("Welcome to Node + MongoDB Server 🚀 With CI/CD And Blue/Green Deployment");
 });
 app.get("/health", (req, res) => {
     res.send("OK");

@@ -71,7 +71,7 @@ jobs:
                  ACTIVE_COLOR="green"
                  IDLE_COLOR="blue"
                  IDLE_PORT=3000
-            el 
+            else
                  ACTIVE_COLOR="none"
                  IDLE_COLOR="blue"
                  IDLE_PORT=3000

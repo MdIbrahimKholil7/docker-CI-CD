@@ -37,7 +37,7 @@ jobs:
           echo "${{ secrets.AWS_KEY }}" > private_key.pem
           chmod 600 private_key.pem
 
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.AWS_USER }}@${{ secrets.AWS_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.AWS_USER }}@${{ secrets.AWS_HOST }} << EOF
 
             # Set up Docker network (if needed)
             docker network create app_network || true
@@ -62,16 +62,52 @@ jobs:
             echo "Waiting for DB to initialize..."
             sleep 30
 
+            if docker ps --filter "name=node-app-blue" | grep node-app-blue; then
+                ACTIVE_COLOR="blue"
+                IDLE_COLOR="green"
+                IDLE_PORT=3001
 
-            # Pull latest Flask app
+            elif docker ps --filter "name=node-app-green" | grep node-app-green; then
+                 ACTIVE_COLOR="green"
+                 IDLE_COLOR="blue"
+                 IDLE_PORT=3000
+            else
+                 ACTIVE_COLOR="none"
+                 IDLE_COLOR="blue"
+                 IDLE_PORT=3000
+            fi
+
+            echo "Active Color: \$ACTIVE_COLOR"
+            echo "Deploying to: \$IDLE_COLOR on port \$IDLE_PORT"
+            
+            # Pull latest node-app
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
             docker pull ${{ secrets.DOCKER_USERNAME }}/node-app
 
+            # Stop and remove the old idle container if it exists
+            docker stop node-app-\$IDLE_COLOR || true
+            docker rm node-app-\$IDLE_COLOR || true
+            
             # Run node app container
             docker run -d \
-              --name node-app \
+              --name node-app-\$IDLE_COLOR \
               --network app_network \
-              -p 3000:3000 \
+              -p \$IDLE_PORT:3000 \
               ${{ secrets.DOCKER_USERNAME }}/node-app
+
+            # Switch NGINX to new idle port
+            echo "Updating NGINX to point to port $IDLE_PORT"
+            sudo sed -i "s|localhost:[0-9]*|localhost:$IDLE_PORT|g" /etc/nginx/conf.d/bluegreen.conf
+            sudo nginx -s reload
+
+
+            echo "Traffic switched to \$IDLE_COLOR"
+
+            # Optionally remove old active container (optional cleanup step, can be skipped for rollback flexibility)
+            if [ "\$ACTIVE_COLOR" != "none" ]; then
+                docker stop node-app-\$ACTIVE_COLOR || true
+                docker rm node-app-\$ACTIVE_COLOR || true
+                echo "Removed old \$ACTIVE_COLOR container"
+            fi
 
           EOF

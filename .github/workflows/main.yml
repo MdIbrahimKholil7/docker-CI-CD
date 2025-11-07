@@ -99,7 +99,7 @@ jobs:
             echo "Updating NGINX to point to port $IDLE_PORT"
             sudo sed -i "s|localhost:[0-9]*|localhost:\$IDLE_PORT|g" /etc/nginx/conf.d/bluegreen.conf
             sudo nginx -s reload
-
+            echo "Switching Port \$IDLE_PORT In the Nginx route"
 
             echo "Traffic switched to \$IDLE_COLOR"
 

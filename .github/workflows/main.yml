@@ -97,7 +97,7 @@ jobs:
 
             # Switch NGINX to new idle port
             echo "Updating NGINX to point to port $IDLE_PORT"
-            sudo sed -i "s|localhost:[0-9]*|localhost:$IDLE_PORT|g" /etc/nginx/conf.d/bluegreen.conf
+            sudo sed -i "s|localhost:[0-9]*|localhost:\$IDLE_PORT|g" /etc/nginx/conf.d/bluegreen.conf
             sudo nginx -s reload
 
 

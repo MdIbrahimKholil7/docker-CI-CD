@@ -105,8 +105,8 @@ jobs:
 
             # Optionally remove old active container (optional cleanup step, can be skipped for rollback flexibility)
             if [ "\$ACTIVE_COLOR" != "none" ]; then
-                docker stop flask-app-\$ACTIVE_COLOR || true
-                docker rm flask-app-\$ACTIVE_COLOR || true
+                docker stop node-app-\$ACTIVE_COLOR || true
+                docker rm node-app-\$ACTIVE_COLOR || true
                 echo "Removed old \$ACTIVE_COLOR container"
             fi
 

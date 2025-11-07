@@ -4,14 +4,12 @@ const mongoose = require("mongoose");
 const app = express();
 app.use(express.json());
 
-// ✅ MongoDB Connection
 mongoose.connect("mongodb://root:example@mongodb:27017/simplUser", {
     authSource: "admin",
 })
     .then(() => console.log("✅ Connected to MongoDB"))
     .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// ✅ Define a simple schema and model
 const userSchema = new mongoose.Schema({
     name: String,
     email: String,
@@ -19,12 +17,13 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
-// 🏠 Home route
-app.get("/", (req, res) => {
-    res.send("Welcome to Node + MongoDB Server 🚀 With CI/CD");
-});
 
-// 📜 Get all users
+app.get("/", (req, res) => {
+    res.send("Welcome to Node + MongoDB Server 🚀 With CI/CD And Blue/Green Deployment 🚀🚀🚀🚀");
+});
+app.get("/health", (req, res) => {
+    res.send("OK");
+});
 app.get("/users", async (req, res) => {
     try {
         const users = await User.find();
@@ -34,7 +33,6 @@ app.get("/users", async (req, res) => {
     }
 });
 
-// ➕ Create a new user
 app.post("/users", async (req, res) => {
     try {
         const { name, email } = req.body;
@@ -46,7 +44,7 @@ app.post("/users", async (req, res) => {
     }
 });
 
-// 🗑️ Delete user by ID
+
 app.delete("/users/:id", async (req, res) => {
     try {
         const result = await User.findByIdAndDelete(req.params.id);
@@ -57,7 +55,6 @@ app.delete("/users/:id", async (req, res) => {
     }
 });
 
-// ✏️ Update user by ID
 app.put("/users/:id", async (req, res) => {
     try {
         const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
@@ -70,6 +67,5 @@ app.put("/users/:id", async (req, res) => {
     }
 });
 
-// ✅ Start the server
 const PORT = 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
